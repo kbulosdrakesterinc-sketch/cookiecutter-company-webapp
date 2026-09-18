@@ -1,0 +1,6 @@
+-r base.txt
+
+django-debug-toolbar>=6.0,<7.0
+django-stubs>=5.2,<6.0
+djangorestframework-stubs>=3.16,<4.0
+basedpyright>=1.31,<2.0
