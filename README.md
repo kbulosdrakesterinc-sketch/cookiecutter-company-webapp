@@ -465,3 +465,33 @@ rm -rf template-test-app
 ```
 
 Be careful with `docker compose down -v`: it deletes the generated project's local PostgreSQL data.
+
+## Local development dependencies
+
+Although the application runs entirely inside Docker, it is recommended to install the frontend and backend dependencies locally.
+
+These local installations are **only for your editor and development tools** (IntelliSense, autocomplete, type checking, linting, and code navigation). The application itself continues to run inside the Docker containers.
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+```
+
+### Backend
+
+```bash
+cd backend
+
+python -m venv .venv
+source .venv/bin/activate      # Linux/macOS
+# .venv\Scripts\activate       # Windows
+
+pip install -r backend/requirements/development.txt
+```
+
+> **Note**
+>
+> - Use Docker to run the application, execute migrations, tests, and builds.
+> - Use the local `node_modules` and `.venv` only for your editor and development tooling.
