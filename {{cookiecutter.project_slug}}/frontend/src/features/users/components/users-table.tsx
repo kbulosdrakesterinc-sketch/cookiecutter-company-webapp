@@ -1,0 +1,71 @@
+import type { DirectoryUser } from "../types/user-directory";
+import { UserStatusBadge } from "./user-status-badge";
+
+interface UsersTableProps {
+  readonly users: readonly DirectoryUser[];
+}
+
+function getDisplayName(user: DirectoryUser): string {
+  const name = `${user.first_name} ${user.last_name}`.trim();
+
+  return name || "—";
+}
+
+export function UsersTable({ users }: UsersTableProps): React.ReactNode {
+  if (users.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
+        <h2 className="text-sm font-semibold text-slate-950">No users found</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Try a different search term.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-slate-200">
+          <thead className="bg-slate-50">
+            <tr>
+              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Name
+              </th>
+              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Email
+              </th>
+              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Account status
+              </th>
+              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Joined
+              </th>
+            </tr>
+          </thead>
+
+          <tbody className="divide-y divide-slate-100">
+            {users.map((user) => (
+              <tr key={user.id}>
+                <td className="px-5 py-4 text-sm font-medium text-slate-950">
+                  {getDisplayName(user)}
+                </td>
+                <td className="px-5 py-4 text-sm text-slate-600">
+                  {user.email}
+                </td>
+                <td className="px-5 py-4">
+                  <UserStatusBadge state={user.account_state} />
+                </td>
+                <td className="px-5 py-4 text-sm text-slate-600">
+                  {new Intl.DateTimeFormat("en", {
+                    dateStyle: "medium",
+                  }).format(new Date(user.date_joined))}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

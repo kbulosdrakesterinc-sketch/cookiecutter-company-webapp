@@ -3,6 +3,7 @@ from uuid import UUID
 
 from apps.accounts.models import User
 from django.contrib.auth.models import Group
+from django.db.models import Q, QuerySet
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,4 +50,25 @@ def get_current_user_profile(
         is_superuser=user.is_superuser,
         roles=role_names,
         permissions=permission_names,
+    )
+
+
+def get_user_directory_queryset(
+    *,
+    search: str = "",
+) -> QuerySet[User]:
+    queryset = User.objects.all()
+
+    normalized_search = search.strip()
+
+    if normalized_search:
+        queryset = queryset.filter(
+            Q(email__icontains=normalized_search)
+            | Q(first_name__icontains=normalized_search)
+            | Q(last_name__icontains=normalized_search)
+        )
+
+    return queryset.order_by(
+        "email",
+        "id",
     )

@@ -15,7 +15,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from apps.accounts.models import User
-from apps.accounts.services import get_current_user_profile
+from apps.accounts.services import (
+    get_current_user_profile,
+    get_user_directory_queryset,
+)
 from apps.accounts.services.activation import (
     AccountActivationInvalidError,
     AccountAlreadyActivatedError,
@@ -24,10 +27,13 @@ from apps.accounts.services.activation import (
 )
 
 from .authentication import CsrfEnforcedSessionAuthentication
+from .pagination import UserDirectoryPagination
+from .permissions import CanViewUserDirectory
 from .serializers import (
     AccountActivationSerializer,
     CurrentUserSerializer,
     LoginSerializer,
+    UserDirectorySerializer,
 )
 
 
@@ -159,6 +165,33 @@ def current_user_view(request: Request) -> Response:
                 current_user_profile,
             ).data,
         }
+    )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, CanViewUserDirectory])
+def user_directory_view(request: Request) -> Response:
+    """Return a paginated, searchable administrative user directory."""
+
+    search = request.query_params.get("search", "")
+
+    queryset = get_user_directory_queryset(
+        search=search,
+    )
+
+    paginator = UserDirectoryPagination()
+    page = paginator.paginate_queryset(
+        queryset,
+        request,
+    )
+
+    serializer = UserDirectorySerializer(
+        page,
+        many=True,
+    )
+
+    return paginator.get_paginated_response(
+        list(serializer.data),
     )
 
 

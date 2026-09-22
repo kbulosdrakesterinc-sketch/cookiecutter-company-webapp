@@ -1,5 +1,7 @@
-from apps.accounts.services import CurrentUserProfile
 from rest_framework import serializers
+
+from apps.accounts.models import User
+from apps.accounts.services import CurrentUserProfile
 
 
 class LoginSerializer(serializers.Serializer[dict[str, object]]):
@@ -46,6 +48,32 @@ class CurrentUserSerializer(
         child=serializers.CharField(),
         read_only=True,
     )
+
+
+class UserDirectorySerializer(serializers.ModelSerializer[User]):
+    account_state = serializers.SerializerMethodField()
+
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
+        model = User
+        fields = (
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "is_active",
+            "account_state",
+            "date_joined",
+        )
+        read_only_fields = fields
+
+    def get_account_state(self, user: User) -> str:
+        if not user.is_active:
+            return "inactive"
+
+        if not user.has_usable_password():
+            return "pending_activation"
+
+        return "active"
 
 
 class AccountActivationSerializer(

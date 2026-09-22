@@ -20,7 +20,7 @@ export default async function AuthenticatedLayout({
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <AppSidebar />
+      <AppSidebar user={user} />
 
       <div className="lg:pl-72">
         <AppHeader user={user} />

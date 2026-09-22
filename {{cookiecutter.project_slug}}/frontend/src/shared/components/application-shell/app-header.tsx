@@ -16,7 +16,7 @@ export function AppHeader({
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
-          <MobileNavigation />
+          <MobileNavigation user={user} />
 
           <div>
             <p className="text-sm font-semibold text-slate-950">

@@ -1,8 +1,15 @@
-import { applicationNavigation } from "@/shared/config/navigation";
+import type { AuthUser } from "@/features/auth/types/auth-user";
+import { getVisibleNavigation } from "@/shared/config/navigation";
 
 import { NavigationLink } from "./navigation-link";
 
-export function AppSidebar(): React.ReactNode {
+interface AppSidebarProps {
+  readonly user: AuthUser;
+}
+
+export function AppSidebar({ user }: AppSidebarProps): React.ReactNode {
+  const navigation = getVisibleNavigation(user);
+
   return (
     <aside className="hidden border-r border-slate-200 bg-white lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
       <div className="flex h-16 items-center border-b border-slate-200 px-6">
@@ -17,10 +24,22 @@ export function AppSidebar(): React.ReactNode {
 
       <nav
         aria-label="Primary navigation"
-        className="flex-1 space-y-1 overflow-y-auto px-4 py-6"
+        className="flex-1 space-y-6 overflow-y-auto px-4 py-6"
       >
-        {applicationNavigation.map((item) => (
-          <NavigationLink item={item} key={item.href} />
+        {navigation.map((section, sectionIndex) => (
+          <div key={section.label ?? `section-${sectionIndex}`}>
+            {section.label ? (
+              <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                {section.label}
+              </p>
+            ) : null}
+
+            <div className="space-y-1">
+              {section.items.map((item) => (
+                <NavigationLink item={item} key={item.href} />
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
 

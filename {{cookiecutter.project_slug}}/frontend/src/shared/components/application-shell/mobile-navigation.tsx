@@ -3,16 +3,24 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { applicationNavigation } from "@/shared/config/navigation";
+import type { AuthUser } from "@/features/auth/types/auth-user";
+import { getVisibleNavigation } from "@/shared/config/navigation";
 
 import { NavigationLink } from "./navigation-link";
 
 const ANIMATION_DURATION_MS = 300;
 
-export function MobileNavigation(): React.ReactNode {
+interface MobileNavigationProps {
+  readonly user: AuthUser;
+}
+
+export function MobileNavigation({
+  user,
+}: MobileNavigationProps): React.ReactNode {
   const [isOpen, setIsOpen] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
 
+  const navigation = getVisibleNavigation(user);
   const navigationId = useId();
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -133,13 +141,25 @@ export function MobileNavigation(): React.ReactNode {
                 </button>
               </div>
 
-              <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-                {applicationNavigation.map((item) => (
-                  <NavigationLink
-                    key={item.href}
-                    item={item}
-                    onNavigate={closeNavigation}
-                  />
+              <nav className="flex-1 space-y-6 overflow-y-auto p-4">
+                {navigation.map((section, sectionIndex) => (
+                  <div key={section.label ?? `section-${sectionIndex}`}>
+                    {section.label ? (
+                      <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        {section.label}
+                      </p>
+                    ) : null}
+
+                    <div className="space-y-1">
+                      {section.items.map((item) => (
+                        <NavigationLink
+                          key={item.href}
+                          item={item}
+                          onNavigate={closeNavigation}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </nav>
 
