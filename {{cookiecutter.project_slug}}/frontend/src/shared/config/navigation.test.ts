@@ -1,11 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import type { AuthUser } from "@/features/auth/types/auth-user";
+import { VIEW_USERS_PERMISSION } from "@/features/users/permissions";
 
-import {
-  getVisibleNavigation,
-  VIEW_USERS_PERMISSION,
-} from "./navigation";
+import { getVisibleNavigation } from "./navigation";
 
 function buildUser(permissions: readonly string[]): AuthUser {
   return {

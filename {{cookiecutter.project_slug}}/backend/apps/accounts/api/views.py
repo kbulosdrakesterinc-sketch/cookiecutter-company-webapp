@@ -1,4 +1,4 @@
-from typing import TypedDict, cast
+from typing import NotRequired, TypedDict, cast
 
 from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import ValidationError
@@ -16,8 +16,10 @@ from rest_framework.response import Response
 
 from apps.accounts.models import User
 from apps.accounts.services import (
+    UserAlreadyExistsError,
     get_current_user_profile,
     get_user_directory_queryset,
+    provision_user,
 )
 from apps.accounts.services.activation import (
     AccountActivationInvalidError,
@@ -28,12 +30,13 @@ from apps.accounts.services.activation import (
 
 from .authentication import CsrfEnforcedSessionAuthentication
 from .pagination import UserDirectoryPagination
-from .permissions import CanViewUserDirectory
+from .permissions import UserDirectoryPermission
 from .serializers import (
     AccountActivationSerializer,
     CurrentUserSerializer,
     LoginSerializer,
     UserDirectorySerializer,
+    UserProvisionSerializer,
 )
 
 
@@ -45,6 +48,12 @@ class LoginData(TypedDict):
 class AccountActivationData(TypedDict):
     password: str
     password_confirmation: str
+
+
+class UserProvisionData(TypedDict):
+    email: str
+    first_name: NotRequired[str]
+    last_name: NotRequired[str]
 
 
 @ensure_csrf_cookie
@@ -168,10 +177,44 @@ def current_user_view(request: Request) -> Response:
     )
 
 
-@api_view(["GET"])
-@permission_classes([IsAuthenticated, CanViewUserDirectory])
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated, UserDirectoryPermission])
 def user_directory_view(request: Request) -> Response:
-    """Return a paginated, searchable administrative user directory."""
+    """List users or provision a new account."""
+
+    if request.method == "POST":
+        serializer = UserProvisionSerializer(
+            data=request.data,
+        )
+        _ = serializer.is_valid(
+            raise_exception=True,
+        )
+
+        data = cast(
+            UserProvisionData,
+            serializer.validated_data,
+        )
+
+        try:
+            user = provision_user(
+                email=data["email"],
+                first_name=data.get("first_name", ""),
+                last_name=data.get("last_name", ""),
+            )
+        except UserAlreadyExistsError as error:
+            return Response(
+                {
+                    "email": [
+                        str(error),
+                    ]
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            UserDirectorySerializer(user).data,
+            status=status.HTTP_201_CREATED,
+        )
 
     search = request.query_params.get("search", "")
 

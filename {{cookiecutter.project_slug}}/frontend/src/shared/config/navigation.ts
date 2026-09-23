@@ -1,10 +1,9 @@
 import type { AuthUser } from "@/features/auth/types/auth-user";
+import { VIEW_USERS_PERMISSION } from "@/features/users/permissions";
 import type {
   NavigationItem,
   NavigationSection,
 } from "@/shared/types/navigation";
-
-export const VIEW_USERS_PERMISSION = "accounts.view_user";
 
 export const applicationNavigation: readonly NavigationSection[] = [
   {

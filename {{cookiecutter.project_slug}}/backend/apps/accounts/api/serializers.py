@@ -1,5 +1,8 @@
+from typing import cast
+
 from rest_framework import serializers
 
+from apps.accounts.managers import UserManager
 from apps.accounts.models import User
 from apps.accounts.services import CurrentUserProfile
 
@@ -74,6 +77,43 @@ class UserDirectorySerializer(serializers.ModelSerializer[User]):
             return "pending_activation"
 
         return "active"
+
+
+class UserProvisionSerializer(
+    serializers.Serializer[dict[str, object]],
+):
+    email = serializers.EmailField(
+        max_length=254,
+    )
+    first_name = serializers.CharField(
+        allow_blank=True,
+        max_length=150,
+        required=False,
+    )
+    last_name = serializers.CharField(
+        allow_blank=True,
+        max_length=150,
+        required=False,
+    )
+
+    def validate_email(self, value: str) -> str:
+        user_manager = cast(
+            UserManager[User],
+            cast(object, User.objects),
+        )
+
+        normalized_email = user_manager.normalize_email(
+            value.strip(),
+        )
+
+        if user_manager.filter(
+            email=normalized_email,
+        ).exists():
+            raise serializers.ValidationError(
+                "A user with this email already exists.",
+            )
+
+        return normalized_email
 
 
 class AccountActivationSerializer(
