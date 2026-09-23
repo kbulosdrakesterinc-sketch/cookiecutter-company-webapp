@@ -22,6 +22,7 @@ from apps.accounts.services import (
     UserAlreadyExistsError,
     UserEmailAlreadyExistsError,
     get_current_user_profile,
+    get_role_detail_queryset,
     get_role_directory_queryset,
     get_user_directory_queryset,
     provision_user,
@@ -45,6 +46,7 @@ from .serializers import (
     AccountActivationSerializer,
     CurrentUserSerializer,
     LoginSerializer,
+    RoleDetailSerializer,
     RoleDirectorySerializer,
     UserDirectorySerializer,
     UserManagementSerializer,
@@ -281,6 +283,24 @@ def role_directory_view(request: Request) -> Response:
 
     return paginator.get_paginated_response(
         list(serializer.data),
+    )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, CanViewRoleDirectory])
+def role_detail_view(
+    request: Request,
+    role_id: int,
+) -> Response:
+    """Return one Django Group with direct users and permissions."""
+
+    role = get_object_or_404(
+        get_role_detail_queryset(),
+        pk=role_id,
+    )
+
+    return Response(
+        RoleDetailSerializer(role).data,
     )
 
 

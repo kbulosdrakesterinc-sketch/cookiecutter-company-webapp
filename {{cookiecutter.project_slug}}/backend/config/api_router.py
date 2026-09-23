@@ -1,6 +1,7 @@
 from django.urls import include, path
 
 from apps.accounts.api.views import (
+    role_detail_view,
     role_directory_view,
     user_detail_view,
     user_directory_view,
@@ -31,5 +32,10 @@ urlpatterns = [
         "roles/",
         role_directory_view,
         name="role-directory",
+    ),
+    path(
+        "roles/<int:role_id>/",
+        role_detail_view,
+        name="role-detail",
     ),
 ]

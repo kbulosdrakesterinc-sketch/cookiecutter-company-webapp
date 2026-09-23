@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 from typing import cast
 
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from rest_framework import serializers
 
 from apps.accounts.managers import UserManager
@@ -96,6 +96,69 @@ class RoleDirectorySerializer(serializers.ModelSerializer[Group]):
             "name",
             "user_count",
             "permission_count",
+        )
+        read_only_fields = fields
+
+
+class RoleDetailUserSerializer(serializers.ModelSerializer[User]):
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
+        model = User
+        fields = (
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "is_active",
+        )
+        read_only_fields = fields
+
+
+class RolePermissionSerializer(serializers.ModelSerializer[Permission]):
+    app_label = serializers.CharField(
+        source="content_type.app_label",
+        read_only=True,
+    )
+    model = serializers.CharField(
+        source="content_type.model",
+        read_only=True,
+    )
+    permission = serializers.SerializerMethodField()
+
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
+        model = Permission
+        fields = (
+            "id",
+            "name",
+            "codename",
+            "app_label",
+            "model",
+            "permission",
+        )
+        read_only_fields = fields
+
+    def get_permission(self, permission: Permission) -> str:
+        return f"{permission.content_type.app_label}.{permission.codename}"
+
+
+class RoleDetailSerializer(serializers.ModelSerializer[Group]):
+    users = RoleDetailUserSerializer(
+        source="direct_users",
+        many=True,
+        read_only=True,
+    )
+    permissions = RolePermissionSerializer(
+        source="direct_permissions",
+        many=True,
+        read_only=True,
+    )
+
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
+        model = Group
+        fields = (
+            "id",
+            "name",
+            "users",
+            "permissions",
         )
         read_only_fields = fields
 

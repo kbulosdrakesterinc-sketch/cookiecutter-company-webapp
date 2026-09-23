@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import type { DirectoryRole } from "../types/role-directory";
 
 interface RolesTableProps {
@@ -38,7 +40,12 @@ export function RolesTable({ roles }: RolesTableProps): React.ReactNode {
             {roles.map((role) => (
               <tr key={role.id}>
                 <td className="px-5 py-4 text-sm font-medium text-slate-950">
-                  {role.name}
+                  <Link
+                    className="font-semibold text-slate-700 hover:text-slate-950"
+                    href={`/administration/roles/${role.id}`}
+                  >
+                    {role.name}
+                  </Link>
                 </td>
                 <td className="px-5 py-4 text-sm text-slate-600">
                   {role.user_count}
