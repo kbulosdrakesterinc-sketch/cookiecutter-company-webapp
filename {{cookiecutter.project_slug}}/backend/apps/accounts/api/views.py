@@ -22,6 +22,7 @@ from apps.accounts.services import (
     UserAlreadyExistsError,
     UserEmailAlreadyExistsError,
     get_current_user_profile,
+    get_role_directory_queryset,
     get_user_directory_queryset,
     provision_user,
     update_user,
@@ -34,12 +35,17 @@ from apps.accounts.services.activation import (
 )
 
 from .authentication import CsrfEnforcedSessionAuthentication
-from .pagination import UserDirectoryPagination
-from .permissions import CanManageUser, UserDirectoryPermission
+from .pagination import RoleDirectoryPagination, UserDirectoryPagination
+from .permissions import (
+    CanManageUser,
+    CanViewRoleDirectory,
+    UserDirectoryPermission,
+)
 from .serializers import (
     AccountActivationSerializer,
     CurrentUserSerializer,
     LoginSerializer,
+    RoleDirectorySerializer,
     UserDirectorySerializer,
     UserManagementSerializer,
     UserProvisionSerializer,
@@ -242,6 +248,33 @@ def user_directory_view(request: Request) -> Response:
     )
 
     serializer = UserDirectorySerializer(
+        page,
+        many=True,
+    )
+
+    return paginator.get_paginated_response(
+        list(serializer.data),
+    )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, CanViewRoleDirectory])
+def role_directory_view(request: Request) -> Response:
+    """Return a paginated, searchable Django Group directory."""
+
+    search = request.query_params.get("search", "")
+
+    queryset = get_role_directory_queryset(
+        search=search,
+    )
+
+    paginator = RoleDirectoryPagination()
+    page = paginator.paginate_queryset(
+        queryset,
+        request,
+    )
+
+    serializer = RoleDirectorySerializer(
         page,
         many=True,
     )

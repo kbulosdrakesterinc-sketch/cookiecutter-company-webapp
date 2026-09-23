@@ -24,6 +24,23 @@ class CanViewUserDirectory(BasePermission):
         return user.has_perm("accounts.view_user")
 
 
+class CanViewRoleDirectory(BasePermission):
+    message: str = "You do not have permission to view roles."
+
+    @override
+    def has_permission(
+        self,
+        request: Request,
+        view: APIView,
+    ) -> bool:
+        user = request.user
+
+        if not isinstance(user, User):
+            return False
+
+        return user.has_perm("auth.view_group")
+
+
 class CanProvisionUser(BasePermission):
     message: str = "You do not have permission to provision users."
 

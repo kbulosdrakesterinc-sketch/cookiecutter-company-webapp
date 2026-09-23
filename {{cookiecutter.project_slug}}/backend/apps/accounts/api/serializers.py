@@ -1,6 +1,7 @@
 from collections.abc import Mapping
 from typing import cast
 
+from django.contrib.auth.models import Group
 from rest_framework import serializers
 
 from apps.accounts.managers import UserManager
@@ -78,6 +79,25 @@ class UserDirectorySerializer(serializers.ModelSerializer[User]):
             return "pending_activation"
 
         return "active"
+
+
+class RoleDirectorySerializer(serializers.ModelSerializer[Group]):
+    user_count = serializers.IntegerField(
+        read_only=True,
+    )
+    permission_count = serializers.IntegerField(
+        read_only=True,
+    )
+
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
+        model = Group
+        fields = (
+            "id",
+            "name",
+            "user_count",
+            "permission_count",
+        )
+        read_only_fields = fields
 
 
 class UserProvisionSerializer(

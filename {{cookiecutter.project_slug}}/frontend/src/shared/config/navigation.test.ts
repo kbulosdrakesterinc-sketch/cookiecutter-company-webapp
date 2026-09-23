@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { AuthUser } from "@/features/auth/types/auth-user";
+import { VIEW_ROLES_PERMISSION } from "@/features/roles/permissions";
 import { VIEW_USERS_PERMISSION } from "@/features/users/permissions";
 
 import { getVisibleNavigation } from "./navigation";
@@ -34,5 +35,25 @@ describe("getVisibleNavigation", () => {
     expect(
       sections.flatMap((section) => section.items).map((item) => item.href),
     ).toContain("/administration/users");
+  });
+
+  it("hides Roles when auth.view_group is absent", () => {
+    const sections = getVisibleNavigation(
+      buildUser([VIEW_USERS_PERMISSION]),
+    );
+
+    expect(
+      sections.flatMap((section) => section.items).map((item) => item.href),
+    ).not.toContain("/administration/roles");
+  });
+
+  it("shows Roles when auth.view_group is present", () => {
+    const sections = getVisibleNavigation(
+      buildUser([VIEW_ROLES_PERMISSION]),
+    );
+
+    expect(
+      sections.flatMap((section) => section.items).map((item) => item.href),
+    ).toContain("/administration/roles");
   });
 });

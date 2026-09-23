@@ -1,4 +1,5 @@
 import type { AuthUser } from "@/features/auth/types/auth-user";
+import { VIEW_ROLES_PERMISSION } from "@/features/roles/permissions";
 import { VIEW_USERS_PERMISSION } from "@/features/users/permissions";
 import type {
   NavigationItem,
@@ -23,6 +24,12 @@ export const applicationNavigation: readonly NavigationSection[] = [
         icon: "users",
         label: "Users",
         requiredPermission: VIEW_USERS_PERMISSION,
+      },
+      {
+        href: "/administration/roles",
+        icon: "users",
+        label: "Roles",
+        requiredPermission: VIEW_ROLES_PERMISSION,
       },
     ],
   },

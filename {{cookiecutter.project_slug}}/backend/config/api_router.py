@@ -1,6 +1,10 @@
 from django.urls import include, path
 
-from apps.accounts.api.views import user_detail_view, user_directory_view
+from apps.accounts.api.views import (
+    role_directory_view,
+    user_detail_view,
+    user_directory_view,
+)
 
 app_name = "v1"
 
@@ -22,5 +26,10 @@ urlpatterns = [
         "users/<uuid:user_id>/",
         user_detail_view,
         name="user-detail",
+    ),
+    path(
+        "roles/",
+        role_directory_view,
+        name="role-directory",
     ),
 ]
