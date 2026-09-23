@@ -1,8 +1,11 @@
+import Link from "next/link";
+
 import type { DirectoryUser } from "../types/user-directory";
 import { UserStatusBadge } from "./user-status-badge";
 
 interface UsersTableProps {
   readonly users: readonly DirectoryUser[];
+  readonly canManageUsers: boolean;
 }
 
 function getDisplayName(user: DirectoryUser): string {
@@ -11,7 +14,10 @@ function getDisplayName(user: DirectoryUser): string {
   return name || "—";
 }
 
-export function UsersTable({ users }: UsersTableProps): React.ReactNode {
+export function UsersTable({
+  users,
+  canManageUsers,
+}: UsersTableProps): React.ReactNode {
   if (users.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
@@ -41,6 +47,11 @@ export function UsersTable({ users }: UsersTableProps): React.ReactNode {
               <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Joined
               </th>
+              {canManageUsers ? (
+                <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Actions
+                </th>
+              ) : null}
             </tr>
           </thead>
 
@@ -61,6 +72,16 @@ export function UsersTable({ users }: UsersTableProps): React.ReactNode {
                     dateStyle: "medium",
                   }).format(new Date(user.date_joined))}
                 </td>
+                {canManageUsers ? (
+                  <td className="px-5 py-4 text-right text-sm">
+                    <Link
+                      className="font-semibold text-slate-700 hover:text-slate-950"
+                      href={`/administration/users/${user.id}`}
+                    >
+                      Manage
+                    </Link>
+                  </td>
+                ) : null}
               </tr>
             ))}
           </tbody>

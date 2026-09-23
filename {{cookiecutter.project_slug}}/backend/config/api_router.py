@@ -1,6 +1,6 @@
 from django.urls import include, path
 
-from apps.accounts.api.views import user_directory_view
+from apps.accounts.api.views import user_detail_view, user_directory_view
 
 app_name = "v1"
 
@@ -17,5 +17,10 @@ urlpatterns = [
         "users/",
         user_directory_view,
         name="user-directory",
+    ),
+    path(
+        "users/<uuid:user_id>/",
+        user_detail_view,
+        name="user-detail",
     ),
 ]

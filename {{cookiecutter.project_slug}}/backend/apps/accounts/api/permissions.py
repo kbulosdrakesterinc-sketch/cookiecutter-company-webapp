@@ -41,6 +41,23 @@ class CanProvisionUser(BasePermission):
         return user.has_perm("accounts.add_user")
 
 
+class CanManageUser(BasePermission):
+    message: str = "You do not have permission to manage users."
+
+    @override
+    def has_permission(
+        self,
+        request: Request,
+        view: APIView,
+    ) -> bool:
+        user = request.user
+
+        if not isinstance(user, User):
+            return False
+
+        return user.has_perm("accounts.change_user")
+
+
 class UserDirectoryPermission(BasePermission):
     """Map each Users-resource method to its Django model permission."""
 

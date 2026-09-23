@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from typing import cast
 
 from rest_framework import serializers
@@ -114,6 +115,86 @@ class UserProvisionSerializer(
             )
 
         return normalized_email
+
+
+class UserManagementSerializer(
+    serializers.Serializer[User],
+):
+    writable_fields = frozenset(
+        {
+            "email",
+            "first_name",
+            "last_name",
+            "is_active",
+        }
+    )
+
+    email = serializers.EmailField(
+        max_length=254,
+        required=False,
+    )
+    first_name = serializers.CharField(
+        allow_blank=True,
+        max_length=150,
+        required=False,
+    )
+    last_name = serializers.CharField(
+        allow_blank=True,
+        max_length=150,
+        required=False,
+    )
+    is_active = serializers.BooleanField(
+        required=False,
+    )
+
+    def validate_email(self, value: str) -> str:
+        user_manager = cast(
+            UserManager[User],
+            cast(object, User.objects),
+        )
+
+        normalized_email = user_manager.normalize_email(
+            value.strip(),
+        )
+
+        instance = cast(
+            User | None,
+            self.instance,
+        )
+        queryset = user_manager.all()
+
+        if instance is not None:
+            queryset = queryset.exclude(pk=instance.pk)
+
+        if queryset.filter(email=normalized_email).exists():
+            raise serializers.ValidationError(
+                "A user with this email already exists.",
+            )
+
+        return normalized_email
+
+    def validate(
+        self,
+        attrs: dict[str, object],
+    ) -> dict[str, object]:
+        initial_data = self.initial_data
+
+        if isinstance(initial_data, Mapping):
+            unsupported_fields = sorted(
+                str(field)
+                for field in initial_data.keys()
+                if field not in self.writable_fields
+            )
+
+            if unsupported_fields:
+                raise serializers.ValidationError(
+                    {
+                        field: ["This field cannot be modified."]
+                        for field in unsupported_fields
+                    }
+                )
+
+        return attrs
 
 
 class AccountActivationSerializer(

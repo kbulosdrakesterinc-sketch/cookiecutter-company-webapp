@@ -7,6 +7,7 @@ import { UsersPagination } from "@/features/users/components/users-pagination";
 import { UsersTable } from "@/features/users/components/users-table";
 import {
   ADD_USERS_PERMISSION,
+  CHANGE_USERS_PERMISSION,
   VIEW_USERS_PERMISSION,
 } from "@/features/users/permissions";
 
@@ -46,6 +47,7 @@ export default async function UsersPage({
   });
 
   const canProvisionUser = user.permissions.includes(ADD_USERS_PERMISSION);
+  const canManageUsers = user.permissions.includes(CHANGE_USERS_PERMISSION);
 
   return (
     <div className="space-y-6">
@@ -95,7 +97,10 @@ export default async function UsersPage({
         </p>
       </div>
 
-      <UsersTable users={directory.results} />
+      <UsersTable
+        canManageUsers={canManageUsers}
+        users={directory.results}
+      />
 
       <UsersPagination
         page={directory.page}

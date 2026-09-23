@@ -1,8 +1,11 @@
 from typing import NotRequired, TypedDict, cast
+from uuid import UUID
 
 from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import ValidationError
+from django.http import Http404
 from django.middleware.csrf import get_token
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from rest_framework import status
 from rest_framework.decorators import (
@@ -17,9 +20,11 @@ from rest_framework.response import Response
 from apps.accounts.models import User
 from apps.accounts.services import (
     UserAlreadyExistsError,
+    UserEmailAlreadyExistsError,
     get_current_user_profile,
     get_user_directory_queryset,
     provision_user,
+    update_user,
 )
 from apps.accounts.services.activation import (
     AccountActivationInvalidError,
@@ -30,12 +35,13 @@ from apps.accounts.services.activation import (
 
 from .authentication import CsrfEnforcedSessionAuthentication
 from .pagination import UserDirectoryPagination
-from .permissions import UserDirectoryPermission
+from .permissions import CanManageUser, UserDirectoryPermission
 from .serializers import (
     AccountActivationSerializer,
     CurrentUserSerializer,
     LoginSerializer,
     UserDirectorySerializer,
+    UserManagementSerializer,
     UserProvisionSerializer,
 )
 
@@ -54,6 +60,13 @@ class UserProvisionData(TypedDict):
     email: str
     first_name: NotRequired[str]
     last_name: NotRequired[str]
+
+
+class UserManagementData(TypedDict):
+    email: NotRequired[str]
+    first_name: NotRequired[str]
+    last_name: NotRequired[str]
+    is_active: NotRequired[bool]
 
 
 @ensure_csrf_cookie
@@ -235,6 +248,64 @@ def user_directory_view(request: Request) -> Response:
 
     return paginator.get_paginated_response(
         list(serializer.data),
+    )
+
+
+@api_view(["GET", "PATCH"])
+@permission_classes([IsAuthenticated, CanManageUser])
+def user_detail_view(
+    request: Request,
+    user_id: UUID,
+) -> Response:
+    """Return or update one existing user account."""
+
+    user = get_object_or_404(
+        User,
+        pk=user_id,
+    )
+
+    if request.method == "GET":
+        return Response(
+            UserDirectorySerializer(user).data,
+        )
+
+    serializer = UserManagementSerializer(
+        instance=user,
+        data=request.data,
+        partial=True,
+    )
+    _ = serializer.is_valid(
+        raise_exception=True,
+    )
+
+    data = cast(
+        UserManagementData,
+        serializer.validated_data,
+    )
+
+    try:
+        updated_user = update_user(
+            user_id=user.id,
+            email=data.get("email"),
+            first_name=data.get("first_name"),
+            last_name=data.get("last_name"),
+            is_active=data.get("is_active"),
+        )
+    except User.DoesNotExist as error:
+        raise Http404 from error
+    except UserEmailAlreadyExistsError as error:
+        return Response(
+            {
+                "email": [
+                    str(error),
+                ]
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    return Response(
+        UserDirectorySerializer(updated_user).data,
+        status=status.HTTP_200_OK,
     )
 
 
