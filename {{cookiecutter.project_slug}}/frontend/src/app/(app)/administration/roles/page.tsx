@@ -1,10 +1,14 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { getCurrentUser } from "@/features/auth/api/get-current-user";
 import { getRoles } from "@/features/roles/api/get-roles";
 import { RolesPagination } from "@/features/roles/components/roles-pagination";
 import { RolesTable } from "@/features/roles/components/roles-table";
-import { VIEW_ROLES_PERMISSION } from "@/features/roles/permissions";
+import {
+  ADD_ROLES_PERMISSION,
+  VIEW_ROLES_PERMISSION,
+} from "@/features/roles/permissions";
 
 interface RolesPageProps {
   readonly searchParams: Promise<{
@@ -40,17 +44,29 @@ export default async function RolesPage({
     page,
     search,
   });
+  const canAddRole = user.permissions.includes(ADD_ROLES_PERMISSION);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-950">
-          Roles
-        </h1>
-        <p className="mt-1 text-sm leading-6 text-slate-600">
-          View reusable application roles and their current memberships and
-          permissions.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-950">
+            Roles
+          </h1>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            View reusable application roles and their current memberships and
+            permissions.
+          </p>
+        </div>
+
+        {canAddRole ? (
+          <Link
+            className="inline-flex w-fit items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
+            href="/administration/roles/new"
+          >
+            Add role
+          </Link>
+        ) : null}
       </div>
 
       <form className="flex max-w-xl gap-2" method="GET">

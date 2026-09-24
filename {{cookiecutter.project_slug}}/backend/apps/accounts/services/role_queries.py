@@ -32,12 +32,8 @@ def get_role_directory_queryset(
     )
 
 
-def get_role_detail_queryset() -> QuerySet[Group]:
-    users = User.objects.order_by(
-        "email",
-        "id",
-    )
-    permissions = Permission.objects.select_related(
+def get_permission_catalog_queryset() -> QuerySet[Permission]:
+    return Permission.objects.select_related(
         "content_type",
     ).order_by(
         "content_type__app_label",
@@ -45,6 +41,14 @@ def get_role_detail_queryset() -> QuerySet[Group]:
         "codename",
         "id",
     )
+
+
+def get_role_detail_queryset() -> QuerySet[Group]:
+    users = User.objects.order_by(
+        "email",
+        "id",
+    )
+    permissions = get_permission_catalog_queryset()
 
     return Group._default_manager.prefetch_related(
         Prefetch(

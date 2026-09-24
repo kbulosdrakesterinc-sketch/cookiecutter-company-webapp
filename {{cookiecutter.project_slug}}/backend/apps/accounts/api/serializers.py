@@ -163,6 +163,45 @@ class RoleDetailSerializer(serializers.ModelSerializer[Group]):
         read_only_fields = fields
 
 
+class RoleManagementSerializer(
+    serializers.Serializer[dict[str, object]],
+):
+    writable_fields = frozenset({"name", "permission_ids"})
+
+    name = serializers.CharField(
+        max_length=150,
+        required=False,
+        trim_whitespace=True,
+    )
+    permission_ids = serializers.ListField(
+        child=serializers.IntegerField(min_value=1),
+        required=False,
+    )
+
+    def validate(
+        self,
+        attrs: dict[str, object],
+    ) -> dict[str, object]:
+        initial_data = self.initial_data
+
+        if isinstance(initial_data, Mapping):
+            unsupported_fields = sorted(
+                str(field)
+                for field in initial_data.keys()
+                if field not in self.writable_fields
+            )
+
+            if unsupported_fields:
+                raise serializers.ValidationError(
+                    {
+                        field: ["This field cannot be modified."]
+                        for field in unsupported_fields
+                    }
+                )
+
+        return attrs
+
+
 class UserProvisionSerializer(
     serializers.Serializer[dict[str, object]],
 ):

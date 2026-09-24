@@ -2,6 +2,7 @@ from typing import NotRequired, TypedDict, cast
 from uuid import UUID
 
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.http import Http404
 from django.middleware.csrf import get_token
@@ -19,13 +20,18 @@ from rest_framework.response import Response
 
 from apps.accounts.models import User
 from apps.accounts.services import (
+    InvalidRolePermissionIdsError,
+    RoleNameAlreadyExistsError,
     UserAlreadyExistsError,
     UserEmailAlreadyExistsError,
+    create_role,
     get_current_user_profile,
+    get_permission_catalog_queryset,
     get_role_detail_queryset,
     get_role_directory_queryset,
     get_user_directory_queryset,
     provision_user,
+    update_role,
     update_user,
 )
 from apps.accounts.services.activation import (
@@ -39,7 +45,9 @@ from .authentication import CsrfEnforcedSessionAuthentication
 from .pagination import RoleDirectoryPagination, UserDirectoryPagination
 from .permissions import (
     CanManageUser,
-    CanViewRoleDirectory,
+    CanUseRolePermissionCatalog,
+    RoleDetailPermission,
+    RoleDirectoryPermission,
     UserDirectoryPermission,
 )
 from .serializers import (
@@ -48,6 +56,8 @@ from .serializers import (
     LoginSerializer,
     RoleDetailSerializer,
     RoleDirectorySerializer,
+    RoleManagementSerializer,
+    RolePermissionSerializer,
     UserDirectorySerializer,
     UserManagementSerializer,
     UserProvisionSerializer,
@@ -75,6 +85,16 @@ class UserManagementData(TypedDict):
     first_name: NotRequired[str]
     last_name: NotRequired[str]
     is_active: NotRequired[bool]
+
+
+class RoleCreateData(TypedDict):
+    name: str
+    permission_ids: NotRequired[list[int]]
+
+
+class RoleUpdateData(TypedDict):
+    name: NotRequired[str]
+    permission_ids: NotRequired[list[int]]
 
 
 @ensure_csrf_cookie
@@ -259,10 +279,46 @@ def user_directory_view(request: Request) -> Response:
     )
 
 
-@api_view(["GET"])
-@permission_classes([IsAuthenticated, CanViewRoleDirectory])
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated, RoleDirectoryPermission])
 def role_directory_view(request: Request) -> Response:
-    """Return a paginated, searchable Django Group directory."""
+    """List Django Groups or create one role."""
+
+    if request.method == "POST":
+        serializer = RoleManagementSerializer(data=request.data)
+        _ = serializer.is_valid(raise_exception=True)
+        data = cast(RoleCreateData, serializer.validated_data)
+
+        if "name" not in data:
+            return Response(
+                {"name": ["This field is required."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            role = create_role(
+                name=data["name"],
+                permission_ids=data.get("permission_ids", []),
+            )
+        except RoleNameAlreadyExistsError as error:
+            return Response(
+                {"name": [str(error)]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except InvalidRolePermissionIdsError as error:
+            return Response(
+                {"permission_ids": [str(error)]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        created_role = get_object_or_404(
+            get_role_detail_queryset(),
+            pk=role.pk,
+        )
+        return Response(
+            RoleDetailSerializer(created_role).data,
+            status=status.HTTP_201_CREATED,
+        )
 
     search = request.query_params.get("search", "")
 
@@ -286,13 +342,53 @@ def role_directory_view(request: Request) -> Response:
     )
 
 
-@api_view(["GET"])
-@permission_classes([IsAuthenticated, CanViewRoleDirectory])
+@api_view(["GET", "PATCH"])
+@permission_classes([IsAuthenticated, RoleDetailPermission])
 def role_detail_view(
     request: Request,
     role_id: int,
 ) -> Response:
-    """Return one Django Group with direct users and permissions."""
+    """Return or update one Django Group."""
+
+    if request.method == "PATCH":
+        serializer = RoleManagementSerializer(
+            data=request.data,
+            partial=True,
+        )
+        _ = serializer.is_valid(raise_exception=True)
+        data = cast(RoleUpdateData, serializer.validated_data)
+
+        try:
+            role = update_role(
+                role_id=role_id,
+                name=data.get("name"),
+                permission_ids=(
+                    data["permission_ids"]
+                    if "permission_ids" in data
+                    else None
+                ),
+            )
+        except Group.DoesNotExist as error:
+            raise Http404 from error
+        except RoleNameAlreadyExistsError as error:
+            return Response(
+                {"name": [str(error)]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except InvalidRolePermissionIdsError as error:
+            return Response(
+                {"permission_ids": [str(error)]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        updated_role = get_object_or_404(
+            get_role_detail_queryset(),
+            pk=role.pk,
+        )
+        return Response(
+            RoleDetailSerializer(updated_role).data,
+            status=status.HTTP_200_OK,
+        )
 
     role = get_object_or_404(
         get_role_detail_queryset(),
@@ -302,6 +398,18 @@ def role_detail_view(
     return Response(
         RoleDetailSerializer(role).data,
     )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, CanUseRolePermissionCatalog])
+def permission_catalog_view(request: Request) -> Response:
+    """Return existing Django permissions for Group permission assignment."""
+
+    serializer = RolePermissionSerializer(
+        get_permission_catalog_queryset(),
+        many=True,
+    )
+    return Response(list(serializer.data))
 
 
 @api_view(["GET", "PATCH"])

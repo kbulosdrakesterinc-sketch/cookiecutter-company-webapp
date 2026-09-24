@@ -1,6 +1,7 @@
 from django.urls import include, path
 
 from apps.accounts.api.views import (
+    permission_catalog_view,
     role_detail_view,
     role_directory_view,
     user_detail_view,
@@ -27,6 +28,11 @@ urlpatterns = [
         "users/<uuid:user_id>/",
         user_detail_view,
         name="user-detail",
+    ),
+    path(
+        "permissions/",
+        permission_catalog_view,
+        name="permission-catalog",
     ),
     path(
         "roles/",

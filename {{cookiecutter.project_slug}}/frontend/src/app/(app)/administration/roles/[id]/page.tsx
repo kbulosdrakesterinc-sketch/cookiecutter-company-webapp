@@ -3,7 +3,12 @@ import { notFound, redirect } from "next/navigation";
 
 import { getCurrentUser } from "@/features/auth/api/get-current-user";
 import { getRole } from "@/features/roles/api/get-role";
-import { VIEW_ROLES_PERMISSION } from "@/features/roles/permissions";
+import { getRolePermissions } from "@/features/roles/api/get-role-permissions";
+import { RoleManagementForm } from "@/features/roles/components/role-management-form";
+import {
+  CHANGE_ROLES_PERMISSION,
+  VIEW_ROLES_PERMISSION,
+} from "@/features/roles/permissions";
 import type { RoleDetailUser } from "@/features/roles/types/role-detail";
 
 interface RoleDetailPageProps {
@@ -42,6 +47,13 @@ export default async function RoleDetailPage({
     notFound();
   }
 
+  const canManageRole = currentUser.permissions.includes(
+    CHANGE_ROLES_PERMISSION,
+  );
+  const availablePermissions = canManageRole
+    ? await getRolePermissions()
+    : [];
+
   return (
     <div className="space-y-8">
       <div>
@@ -62,9 +74,31 @@ export default async function RoleDetailPage({
           {role.name}
         </h1>
         <p className="mt-1 text-sm leading-6 text-slate-600">
-          Read-only role membership and directly assigned permissions.
+          {canManageRole
+            ? "Manage this role while keeping assigned users read-only."
+            : "Read-only role membership and directly assigned permissions."}
         </p>
       </div>
+
+      {canManageRole ? (
+        <section aria-labelledby="role-management-heading" className="space-y-3">
+          <div>
+            <h2
+              className="text-lg font-semibold text-slate-950"
+              id="role-management-heading"
+            >
+              Edit role
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Rename the role or replace its direct Django permissions.
+            </p>
+          </div>
+          <RoleManagementForm
+            availablePermissions={availablePermissions}
+            role={role}
+          />
+        </section>
+      ) : null}
 
       <section aria-labelledby="role-users-heading" className="space-y-3">
         <div className="flex items-center justify-between gap-4">
