@@ -109,6 +109,16 @@ class RoleUpdateData(TypedDict):
     permission_ids: NotRequired[list[int]]
 
 
+def _get_authenticated_user(request: Request) -> User:
+    return cast(
+        User,
+        cast(
+            object,
+            request.user,
+        ),
+    )
+
+
 @ensure_csrf_cookie
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -250,6 +260,7 @@ def user_directory_view(request: Request) -> Response:
 
         try:
             user = provision_user(
+                actor=_get_authenticated_user(request),
                 email=data["email"],
                 first_name=data.get("first_name", ""),
                 last_name=data.get("last_name", ""),
@@ -309,6 +320,7 @@ def role_directory_view(request: Request) -> Response:
 
         try:
             role = create_role(
+                actor=_get_authenticated_user(request),
                 name=data["name"],
                 permission_ids=data.get("permission_ids", []),
             )
@@ -372,6 +384,7 @@ def role_detail_view(
 
         try:
             role = update_role(
+                actor=_get_authenticated_user(request),
                 role_id=role_id,
                 name=data.get("name"),
                 permission_ids=(
@@ -431,6 +444,7 @@ def role_membership_view(
 
     try:
         role = update_role_membership(
+            actor=_get_authenticated_user(request),
             role_id=role_id,
             add_user_ids=data.get("add_user_ids", []),
             remove_user_ids=data.get("remove_user_ids", []),
@@ -543,6 +557,7 @@ def user_detail_view(
 
     try:
         updated_user = update_user(
+            actor=_get_authenticated_user(request),
             user_id=user.id,
             email=data.get("email"),
             first_name=data.get("first_name"),

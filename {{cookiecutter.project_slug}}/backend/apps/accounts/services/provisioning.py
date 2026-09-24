@@ -4,6 +4,7 @@ from django.db import IntegrityError, transaction
 
 from apps.accounts.managers import UserManager
 from apps.accounts.models import User
+from apps.audit.services import AuditAction, AuditTarget, record_audit_event
 
 
 class UserAlreadyExistsError(ValueError):
@@ -12,6 +13,7 @@ class UserAlreadyExistsError(ValueError):
 
 def provision_user(
     *,
+    actor: User,
     email: str,
     first_name: str = "",
     last_name: str = "",
@@ -29,7 +31,7 @@ def provision_user(
 
     try:
         with transaction.atomic():
-            return user_manager.create_user(
+            user = user_manager.create_user(
                 email=normalized_email,
                 password=None,
                 first_name=first_name.strip(),
@@ -38,6 +40,22 @@ def provision_user(
                 is_staff=False,
                 is_superuser=False,
             )
+            _ = record_audit_event(
+                actor=actor,
+                action=AuditAction.USER_PROVISIONED,
+                target_type=AuditTarget.USER,
+                target_id=str(user.pk),
+                target_display=user.email,
+                changes={
+                    "fields": {
+                        "email": {"to": user.email},
+                        "first_name": {"to": user.first_name},
+                        "last_name": {"to": user.last_name},
+                        "is_active": {"to": user.is_active},
+                    }
+                },
+            )
+            return user
     except IntegrityError as error:
         if user_manager.filter(
             email=normalized_email,

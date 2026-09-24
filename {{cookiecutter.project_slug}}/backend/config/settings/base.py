@@ -120,6 +120,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "apps.core.apps.CoreConfig",  # Shared project utilities
     "apps.accounts.apps.AccountsConfig",  # Authentication and user management
+    "apps.audit.apps.AuditConfig",  # Structured audit events
 ]
 
 INSTALLED_APPS = [
