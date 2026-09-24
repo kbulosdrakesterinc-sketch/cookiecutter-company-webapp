@@ -1,5 +1,6 @@
 from collections.abc import Mapping
 from typing import cast
+from uuid import UUID
 
 from django.contrib.auth.models import Group, Permission
 from rest_framework import serializers
@@ -198,6 +199,67 @@ class RoleManagementSerializer(
                         for field in unsupported_fields
                     }
                 )
+
+        return attrs
+
+
+class RoleMembershipSerializer(
+    serializers.Serializer[dict[str, object]],
+):
+    writable_fields = frozenset(
+        {
+            "add_user_ids",
+            "remove_user_ids",
+        }
+    )
+
+    add_user_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        required=False,
+    )
+    remove_user_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        required=False,
+    )
+
+    def validate(
+        self,
+        attrs: dict[str, object],
+    ) -> dict[str, object]:
+        initial_data = self.initial_data
+
+        if isinstance(initial_data, Mapping):
+            unsupported_fields = sorted(
+                str(field)
+                for field in initial_data.keys()
+                if field not in self.writable_fields
+            )
+
+            if unsupported_fields:
+                raise serializers.ValidationError(
+                    {
+                        field: ["This field cannot be modified."]
+                        for field in unsupported_fields
+                    }
+                )
+
+        add_user_ids = cast(
+            list[UUID],
+            attrs.get("add_user_ids", []),
+        )
+        remove_user_ids = cast(
+            list[UUID],
+            attrs.get("remove_user_ids", []),
+        )
+
+        if set(add_user_ids) & set(remove_user_ids):
+            message = "A user cannot be both added and removed in one request."
+            raise serializers.ValidationError(
+                {
+                    "add_user_ids": [message],
+                    "remove_user_ids": [message],
+                }
+            )
 
         return attrs
 

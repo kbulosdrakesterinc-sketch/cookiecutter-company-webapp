@@ -4,6 +4,8 @@ from apps.accounts.api.views import (
     permission_catalog_view,
     role_detail_view,
     role_directory_view,
+    role_membership_candidates_view,
+    role_membership_view,
     user_detail_view,
     user_directory_view,
 )
@@ -43,5 +45,15 @@ urlpatterns = [
         "roles/<int:role_id>/",
         role_detail_view,
         name="role-detail",
+    ),
+    path(
+        "roles/<int:role_id>/membership/",
+        role_membership_view,
+        name="role-membership",
+    ),
+    path(
+        "roles/<int:role_id>/membership-candidates/",
+        role_membership_candidates_view,
+        name="role-membership-candidates",
     ),
 ]

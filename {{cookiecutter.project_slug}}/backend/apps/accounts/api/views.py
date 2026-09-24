@@ -20,6 +20,8 @@ from rest_framework.response import Response
 
 from apps.accounts.models import User
 from apps.accounts.services import (
+    ConflictingRoleMemberIdsError,
+    InvalidRoleMemberIdsError,
     InvalidRolePermissionIdsError,
     RoleNameAlreadyExistsError,
     UserAlreadyExistsError,
@@ -29,9 +31,11 @@ from apps.accounts.services import (
     get_permission_catalog_queryset,
     get_role_detail_queryset,
     get_role_directory_queryset,
+    get_role_membership_candidate_queryset,
     get_user_directory_queryset,
     provision_user,
     update_role,
+    update_role_membership,
     update_user,
 )
 from apps.accounts.services.activation import (
@@ -44,6 +48,7 @@ from apps.accounts.services.activation import (
 from .authentication import CsrfEnforcedSessionAuthentication
 from .pagination import RoleDirectoryPagination, UserDirectoryPagination
 from .permissions import (
+    CanChangeRole,
     CanManageUser,
     CanUseRolePermissionCatalog,
     RoleDetailPermission,
@@ -55,8 +60,10 @@ from .serializers import (
     CurrentUserSerializer,
     LoginSerializer,
     RoleDetailSerializer,
+    RoleDetailUserSerializer,
     RoleDirectorySerializer,
     RoleManagementSerializer,
+    RoleMembershipSerializer,
     RolePermissionSerializer,
     UserDirectorySerializer,
     UserManagementSerializer,
@@ -85,6 +92,11 @@ class UserManagementData(TypedDict):
     first_name: NotRequired[str]
     last_name: NotRequired[str]
     is_active: NotRequired[bool]
+
+
+class RoleMembershipData(TypedDict):
+    add_user_ids: NotRequired[list[UUID]]
+    remove_user_ids: NotRequired[list[UUID]]
 
 
 class RoleCreateData(TypedDict):
@@ -397,6 +409,91 @@ def role_detail_view(
 
     return Response(
         RoleDetailSerializer(role).data,
+    )
+
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated, CanChangeRole])
+def role_membership_view(
+    request: Request,
+    role_id: int,
+) -> Response:
+    """Apply an explicit membership delta to one Django Group."""
+
+    serializer = RoleMembershipSerializer(
+        data=request.data,
+    )
+    _ = serializer.is_valid(raise_exception=True)
+    data = cast(
+        RoleMembershipData,
+        serializer.validated_data,
+    )
+
+    try:
+        role = update_role_membership(
+            role_id=role_id,
+            add_user_ids=data.get("add_user_ids", []),
+            remove_user_ids=data.get("remove_user_ids", []),
+        )
+    except Group.DoesNotExist as error:
+        raise Http404 from error
+    except InvalidRoleMemberIdsError as error:
+        return Response(
+            {
+                "user_ids": [
+                    str(error),
+                ]
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    except ConflictingRoleMemberIdsError as error:
+        return Response(
+            {
+                "detail": str(error),
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    updated_role = get_object_or_404(
+        get_role_detail_queryset(),
+        pk=role.pk,
+    )
+    return Response(
+        RoleDetailSerializer(updated_role).data,
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, CanChangeRole])
+def role_membership_candidates_view(
+    request: Request,
+    role_id: int,
+) -> Response:
+    """Search non-members for focused Role membership assignment."""
+
+    _ = get_object_or_404(
+        Group,
+        pk=role_id,
+    )
+
+    queryset = get_role_membership_candidate_queryset(
+        role_id=role_id,
+        search=request.query_params.get("search", ""),
+    )
+
+    paginator = UserDirectoryPagination()
+    page = paginator.paginate_queryset(
+        queryset,
+        request,
+    )
+    serializer = RoleDetailUserSerializer(
+        page,
+        many=True,
+    )
+
+    return paginator.get_paginated_response(
+        list(serializer.data),
     )
 
 

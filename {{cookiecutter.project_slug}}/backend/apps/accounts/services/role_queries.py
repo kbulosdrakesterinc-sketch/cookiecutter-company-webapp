@@ -1,5 +1,5 @@
 from django.contrib.auth.models import Group, Permission
-from django.db.models import Count, Prefetch, QuerySet
+from django.db.models import Count, Prefetch, Q, QuerySet
 
 from apps.accounts.models import User
 
@@ -40,6 +40,30 @@ def get_permission_catalog_queryset() -> QuerySet[Permission]:
         "content_type__model",
         "codename",
         "id",
+    )
+
+
+def get_role_membership_candidate_queryset(
+    *,
+    role_id: int,
+    search: str,
+) -> QuerySet[User]:
+    normalized_search = search.strip()
+
+    if not normalized_search:
+        return User.objects.none()
+
+    return (
+        User.objects.exclude(groups__pk=role_id)
+        .filter(
+            Q(email__icontains=normalized_search)
+            | Q(first_name__icontains=normalized_search)
+            | Q(last_name__icontains=normalized_search)
+        )
+        .order_by(
+            "email",
+            "id",
+        )
     )
 
 

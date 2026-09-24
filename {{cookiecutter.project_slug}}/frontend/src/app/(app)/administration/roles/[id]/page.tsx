@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/features/auth/api/get-current-user";
 import { getRole } from "@/features/roles/api/get-role";
 import { getRolePermissions } from "@/features/roles/api/get-role-permissions";
 import { RoleManagementForm } from "@/features/roles/components/role-management-form";
+import { RoleMembershipManager } from "@/features/roles/components/role-membership-manager";
 import {
   CHANGE_ROLES_PERMISSION,
   VIEW_ROLES_PERMISSION,
@@ -75,7 +76,7 @@ export default async function RoleDetailPage({
         </h1>
         <p className="mt-1 text-sm leading-6 text-slate-600">
           {canManageRole
-            ? "Manage this role while keeping assigned users read-only."
+            ? "Manage this role's name, direct permissions, and assigned users."
             : "Read-only role membership and directly assigned permissions."}
         </p>
       </div>
@@ -100,68 +101,72 @@ export default async function RoleDetailPage({
         </section>
       ) : null}
 
-      <section aria-labelledby="role-users-heading" className="space-y-3">
-        <div className="flex items-center justify-between gap-4">
-          <h2
-            className="text-lg font-semibold text-slate-950"
-            id="role-users-heading"
-          >
-            Assigned users
-          </h2>
-          <p className="text-sm text-slate-500">
-            {countLabel(role.users.length, "user")}
-          </p>
-        </div>
+      {canManageRole ? (
+        <RoleMembershipManager role={role} />
+      ) : (
+        <section aria-labelledby="role-users-heading" className="space-y-3">
+          <div className="flex items-center justify-between gap-4">
+            <h2
+              className="text-lg font-semibold text-slate-950"
+              id="role-users-heading"
+            >
+              Assigned users
+            </h2>
+            <p className="text-sm text-slate-500">
+              {countLabel(role.users.length, "user")}
+            </p>
+          </div>
 
-        {role.users.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-sm text-slate-500">
-            No users are directly assigned to this role.
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-slate-50">
-                  <tr>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Name
-                    </th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Email
-                    </th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {role.users.map((user) => (
-                    <tr key={user.id}>
-                      <td className="px-5 py-4 text-sm font-medium text-slate-950">
-                        {getDisplayName(user)}
-                      </td>
-                      <td className="px-5 py-4 text-sm text-slate-600">
-                        {user.email}
-                      </td>
-                      <td className="px-5 py-4 text-sm">
-                        <span
-                          className={
-                            user.is_active
-                              ? "inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"
-                              : "inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600"
-                          }
-                        >
-                          {user.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {role.users.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-sm text-slate-500">
+              No users are directly assigned to this role.
             </div>
-          </div>
-        )}
-      </section>
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Name
+                      </th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Email
+                      </th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {role.users.map((user) => (
+                      <tr key={user.id}>
+                        <td className="px-5 py-4 text-sm font-medium text-slate-950">
+                          {getDisplayName(user)}
+                        </td>
+                        <td className="px-5 py-4 text-sm text-slate-600">
+                          {user.email}
+                        </td>
+                        <td className="px-5 py-4 text-sm">
+                          <span
+                            className={
+                              user.is_active
+                                ? "inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"
+                                : "inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600"
+                            }
+                          >
+                            {user.is_active ? "Active" : "Inactive"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       <section aria-labelledby="role-permissions-heading" className="space-y-3">
         <div className="flex items-center justify-between gap-4">
