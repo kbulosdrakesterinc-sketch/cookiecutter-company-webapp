@@ -1,5 +1,6 @@
 from django.urls import include, path
 
+from apps.audit.api.views import audit_event_directory_view
 from apps.accounts.api.views import (
     permission_catalog_view,
     role_detail_view,
@@ -55,5 +56,10 @@ urlpatterns = [
         "roles/<int:role_id>/membership-candidates/",
         role_membership_candidates_view,
         name="role-membership-candidates",
+    ),
+    path(
+        "audit-events/",
+        audit_event_directory_view,
+        name="audit-event-directory",
     ),
 ]
