@@ -14,11 +14,21 @@ class AuditAction:
     ROLE_RENAMED = "admin.role.renamed"
     ROLE_PERMISSIONS_CHANGED = "admin.role.permissions_changed"
     ROLE_MEMBERSHIP_CHANGED = "admin.role.membership_changed"
+    REFERENCE_DATA_SET_CREATED = "admin.reference_data.set_created"
+    REFERENCE_DATA_SET_UPDATED = "admin.reference_data.set_updated"
+    REFERENCE_DATA_SET_ACTIVATED = "admin.reference_data.set_activated"
+    REFERENCE_DATA_SET_DEACTIVATED = "admin.reference_data.set_deactivated"
+    REFERENCE_DATA_VALUE_CREATED = "admin.reference_data.value_created"
+    REFERENCE_DATA_VALUE_UPDATED = "admin.reference_data.value_updated"
+    REFERENCE_DATA_VALUE_ACTIVATED = "admin.reference_data.value_activated"
+    REFERENCE_DATA_VALUE_DEACTIVATED = "admin.reference_data.value_deactivated"
 
 
 class AuditTarget:
     USER = "accounts.user"
     ROLE = "auth.group"
+    REFERENCE_DATA_SET = "reference_data.referencedataset"
+    REFERENCE_DATA_VALUE = "reference_data.referencedatavalue"
 
 
 def record_audit_event(

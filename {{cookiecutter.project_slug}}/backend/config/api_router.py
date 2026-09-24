@@ -1,6 +1,12 @@
 from django.urls import include, path
 
 from apps.audit.api.views import audit_event_directory_view
+from apps.reference_data.api.views import (
+    reference_data_set_detail_view,
+    reference_data_set_directory_view,
+    reference_data_value_detail_view,
+    reference_data_value_directory_view,
+)
 from apps.accounts.api.views import (
     permission_catalog_view,
     role_detail_view,
@@ -61,5 +67,25 @@ urlpatterns = [
         "audit-events/",
         audit_event_directory_view,
         name="audit-event-directory",
+    ),
+    path(
+        "reference-data/",
+        reference_data_set_directory_view,
+        name="reference-data-set-directory",
+    ),
+    path(
+        "reference-data/<uuid:reference_set_id>/",
+        reference_data_set_detail_view,
+        name="reference-data-set-detail",
+    ),
+    path(
+        "reference-data/<uuid:reference_set_id>/values/",
+        reference_data_value_directory_view,
+        name="reference-data-value-directory",
+    ),
+    path(
+        "reference-data/<uuid:reference_set_id>/values/<uuid:value_id>/",
+        reference_data_value_detail_view,
+        name="reference-data-value-detail",
     ),
 ]

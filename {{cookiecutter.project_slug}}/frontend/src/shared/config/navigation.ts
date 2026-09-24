@@ -1,5 +1,6 @@
 import { VIEW_AUDIT_EVENTS_PERMISSION } from "@/features/audit/permissions";
 import type { AuthUser } from "@/features/auth/types/auth-user";
+import { VIEW_REFERENCE_DATA_PERMISSION } from "@/features/reference-data/permissions";
 import { VIEW_ROLES_PERMISSION } from "@/features/roles/permissions";
 import { VIEW_USERS_PERMISSION } from "@/features/users/permissions";
 import type {
@@ -31,6 +32,12 @@ export const applicationNavigation: readonly NavigationSection[] = [
         icon: "users",
         label: "Roles",
         requiredPermission: VIEW_ROLES_PERMISSION,
+      },
+      {
+        href: "/administration/reference-data",
+        icon: "users",
+        label: "Reference Data",
+        requiredPermission: VIEW_REFERENCE_DATA_PERMISSION,
       },
       {
         href: "/administration/audit-log",

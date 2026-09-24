@@ -121,6 +121,7 @@ LOCAL_APPS = [
     "apps.core.apps.CoreConfig",  # Shared project utilities
     "apps.accounts.apps.AccountsConfig",  # Authentication and user management
     "apps.audit.apps.AuditConfig",  # Structured audit events
+    "apps.reference_data.apps.ReferenceDataConfig",  # Controlled lookup data
 ]
 
 INSTALLED_APPS = [

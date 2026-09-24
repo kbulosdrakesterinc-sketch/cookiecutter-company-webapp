@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { VIEW_AUDIT_EVENTS_PERMISSION } from "@/features/audit/permissions";
 import type { AuthUser } from "@/features/auth/types/auth-user";
+import { VIEW_REFERENCE_DATA_PERMISSION } from "@/features/reference-data/permissions";
 import { VIEW_ROLES_PERMISSION } from "@/features/roles/permissions";
 import { VIEW_USERS_PERMISSION } from "@/features/users/permissions";
 
@@ -56,6 +57,26 @@ describe("getVisibleNavigation", () => {
     expect(
       sections.flatMap((section) => section.items).map((item) => item.href),
     ).toContain("/administration/roles");
+  });
+
+  it("hides Reference Data when its view permission is absent", () => {
+    const sections = getVisibleNavigation(
+      buildUser([VIEW_USERS_PERMISSION, VIEW_ROLES_PERMISSION]),
+    );
+
+    expect(
+      sections.flatMap((section) => section.items).map((item) => item.href),
+    ).not.toContain("/administration/reference-data");
+  });
+
+  it("shows Reference Data when its view permission is present", () => {
+    const sections = getVisibleNavigation(
+      buildUser([VIEW_REFERENCE_DATA_PERMISSION]),
+    );
+
+    expect(
+      sections.flatMap((section) => section.items).map((item) => item.href),
+    ).toContain("/administration/reference-data");
   });
 
   it("hides Audit Log when audit.view_auditevent is absent", () => {
