@@ -24,6 +24,8 @@ Browser
 
 Browser-side code should call the Next.js BFF rather than Django directly.
 
+For the complete development, architecture, Administration, permissions, and extension guide, see [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
+
 ---
 
 ## Prerequisites

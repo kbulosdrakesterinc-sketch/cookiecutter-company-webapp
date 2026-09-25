@@ -4,13 +4,15 @@ A reusable Cookiecutter template for internal company web applications.
 
 This repository provides a generic company-application foundation built with Django, Django REST Framework, PostgreSQL, Next.js, and Docker Compose.
 
-The template is intentionally focused on capabilities that are useful across many internal company systems: authentication, authorization, application navigation, administration, user management, reusable CRUD infrastructure, auditing, and API/BFF integration.
+The template is intentionally focused on capabilities that are useful across many internal company systems: authentication, authorization, application navigation, administration, user management, shared Administration UI primitives, structured audit events, Reference Data, and API/BFF integration.
 
 > The template supplies shared company-application infrastructure and cross-cutting administrative capabilities.
 >
 > Project-specific business domains belong to generated applications, not to the template.
 
-Examples of project-specific domains include warehouses, products, orders, attendance, payroll, tickets, assets, and other workflow-specific concepts.
+Application-specific business rules and workflows belong in generated projects rather than in the reusable template.
+
+The durable v1 architecture, scope, and extension contract is documented in [`docs/V1_BASELINE.md`](docs/V1_BASELINE.md).
 
 ---
 
@@ -56,21 +58,7 @@ COOKIECUTTER BOILERPLATE
 
 These are horizontal capabilities: they support many kinds of company applications without defining what the application itself does.
 
-A generated application then adds its own business domains. For example, an e-commerce project may add:
-
-```text
-GENERATED E-COMMERCE APPLICATION
-│
-├── Warehouses
-├── Products
-├── Customers
-├── Orders
-├── Payments
-├── Delivery
-└── Domain statuses and workflows
-```
-
-An HRMS, ticketing system, asset-management application, or another internal system would add different domain modules while keeping the same reusable platform foundation.
+A generated application then adds its own domain modules and business rules while keeping the same reusable platform foundation. The template should stay focused on cross-cutting application infrastructure.
 
 ## Template boundary
 
@@ -87,15 +75,7 @@ Typical template concerns include:
 - reusable API and BFF request handling;
 - generic reference-data infrastructure when the values do not encode workflow rules.
 
-Project-specific concepts stay in generated applications. Examples include:
-
-- warehouse and inventory behavior;
-- product catalogs;
-- order, payment, and delivery workflows;
-- attendance and payroll rules;
-- ticket lifecycles;
-- asset movement rules;
-- approval workflows that are specific to one system.
+Project-specific concepts stay in generated applications. This includes domain entities, workflow state machines, approval rules, calculations, and other behavior that only makes sense for one application.
 
 A useful rule is:
 
@@ -105,9 +85,9 @@ A useful rule is:
 
 ## Administration versus business domains
 
-The generated application may include an **Administration** area by default, but Administration is a shell rather than a single business domain.
+The generated application includes an **Administration** area by default, but Administration is a shell rather than a single business domain.
 
-The template may provide pages such as:
+The v1 template provides:
 
 ```text
 Administration
@@ -117,19 +97,7 @@ Administration
 └── Audit Log
 ```
 
-A generated project can extend the same Administration area with project-specific management pages:
-
-```text
-Administration
-├── Users
-├── Roles & Permissions
-├── Reference Data
-├── Audit Log
-├── Warehouses
-└── Other project-specific master data
-```
-
-This keeps the user experience consistent without forcing e-commerce, HRMS, ticketing, or asset-management concepts into every generated project.
+A generated project may extend the same Administration area with application-specific management pages when those pages are appropriate for that application. Those extensions remain owned by the generated project unless they prove to be reusable cross-application infrastructure.
 
 ## User management
 
@@ -142,7 +110,7 @@ Administrator creates/provisions user
   ↓
 User has no usable password yet
   ↓
-Activation link is generated
+An activation link is generated explicitly
   ↓
 User creates an initial password
   ↓
@@ -157,27 +125,19 @@ Authentication answers **who the user is**. Authorization answers **what the use
 
 Authorization belongs in the template because every generated application should enforce permissions consistently at the backend, regardless of whether the frontend hides or shows a navigation item.
 
-Django groups and permissions can provide the initial foundation, with project-specific permissions added by generated domain applications.
+Django `Group` and `Permission` are the authorization foundation. Generated applications add their own model permissions as their domain modules are introduced.
 
 ## Reference data and statuses
 
-The template may provide generic reference-data infrastructure, but it should not assume that every status is interchangeable.
+The template provides fixed-schema Reference Data sets and values for controlled lookup values. Reference Data should be reserved for values that are genuinely configurable without changing business logic.
 
-For example, a generated e-commerce application may define order, payment, warehouse, and delivery statuses separately. If a status controls business workflow or transitions, that behavior belongs to the relevant domain rather than to a universal `Status` model.
-
-Generic reference data should be reserved for values that are genuinely configurable without changing business logic.
+If a value drives workflow transitions, calculations, validation rules, or other domain behavior, model it in the generated application's domain instead of treating Reference Data as a universal schema or workflow engine.
 
 ## Audit infrastructure
 
-The template should make it possible to record administrative and business changes consistently, including information such as:
+The v1 audit infrastructure records structured events for the Administration mutations implemented by the template: user provisioning and supported user changes, role creation/rename/permission/membership changes, and Reference Data set/value changes. The Administration Audit Log is read-only.
 
-```text
-who changed something
-what changed
-when it changed
-```
-
-Generated domains can then emit their own audit events without implementing a new audit mechanism for each project.
+The model stores actor, action, target metadata, structured changes, optional context, and occurrence time. The v1 baseline does not claim regulatory compliance, tamper-proof storage, retention policy enforcement, export guarantees, or database-level immutability.
 
 ---
 
@@ -423,20 +383,7 @@ no output
 
 The template should contain shared company-application capabilities but should not accidentally absorb one project's business domain.
 
-From the template repository, search for domain-specific terms that should not be part of the generic foundation. For example:
-
-```bash
-grep -RniEI \
-  --exclude-dir='__pycache__' \
-  --exclude-dir='node_modules' \
-  --exclude-dir='.next' \
-  --exclude-dir='.git' \
-  'HRMS|attendance|filing|biometric|payroll|warehouse|inventory|product|order|payment|delivery|ticket|asset movement' \
-  '{{cookiecutter.project_slug}}' \
-  || true
-```
-
-Review every match rather than treating every match as automatically invalid. Documentation may intentionally mention domain examples, while generated source code should remain generic unless the feature is deliberately part of the reusable baseline.
+During template review, inspect new backend apps, frontend features, navigation items, permissions, and migrations and ask whether they are truly reusable across generated applications. Application-specific terminology or workflow behavior in the reusable template should be treated as a design-review signal, not automatically generalized into the boilerplate.
 
 ## Disposable test projects
 
