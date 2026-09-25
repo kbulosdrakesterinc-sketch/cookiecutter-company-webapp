@@ -317,9 +317,7 @@ CSRF_COOKIE_SAMESITE = "Lax"
 #   (CSS, JavaScript, images).
 #
 # Media:
-#   User-uploaded application content
-#   profile photos, leave attachments, and
-#   supporting HR documents.
+#   User-uploaded application content.
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"

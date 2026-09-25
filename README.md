@@ -48,7 +48,7 @@ COOKIECUTTER BOILERPLATE
 ├── Dashboard
 ├── Administration shell
 ├── User management
-├── Generic CRUD building blocks
+├── Shared Administration UI primitives
 ├── Audit infrastructure
 ├── Reference-data infrastructure
 └── API/BFF infrastructure
@@ -81,8 +81,8 @@ Typical template concerns include:
 - login, logout, sessions, and account activation;
 - users, roles, groups, and permissions;
 - authenticated application layout and navigation;
-- administration pages and reusable management UI patterns;
-- tables, forms, filtering, pagination, empty states, and confirmation flows;
+- administration pages with shared page-header, empty-state, and pagination primitives;
+- feature-owned tables, forms, filtering, permissions, and mutation behavior;
 - audit metadata and audit-event infrastructure;
 - reusable API and BFF request handling;
 - generic reference-data infrastructure when the values do not encode workflow rules.
@@ -488,7 +488,7 @@ python -m venv .venv
 source .venv/bin/activate      # Linux/macOS
 # .venv\Scripts\activate       # Windows
 
-pip install -r backend/requirements/development.txt
+pip install -r requirements/development.txt
 ```
 
 > **Note**
