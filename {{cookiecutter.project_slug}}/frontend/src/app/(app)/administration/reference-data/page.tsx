@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { getCurrentUser } from "@/features/auth/api/get-current-user";
+import { AdministrationPageHeader } from "@/shared/administration/administration-page-header";
 import { getReferenceDataSets } from "@/features/reference-data/api/get-reference-data-sets";
 import { ReferenceDataPagination } from "@/features/reference-data/components/reference-data-pagination";
 import { ReferenceDataSetsTable } from "@/features/reference-data/components/reference-data-sets-table";
@@ -62,26 +63,20 @@ export default async function ReferenceDataPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-950">
-            Reference Data
-          </h1>
-          <p className="mt-1 text-sm leading-6 text-slate-600">
-            Manage controlled lookup lists that do not encode application
-            workflow rules.
-          </p>
-        </div>
-
-        {canAddSets ? (
-          <Link
-            className="inline-flex w-fit items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
-            href="/administration/reference-data/new"
-          >
-            Add lookup set
-          </Link>
-        ) : null}
-      </div>
+      <AdministrationPageHeader
+        action={
+          canAddSets ? (
+            <Link
+              className="inline-flex w-fit items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
+              href="/administration/reference-data/new"
+            >
+              Add lookup set
+            </Link>
+          ) : null
+        }
+        description="Manage controlled lookup lists that do not encode application workflow rules."
+        title="Reference Data"
+      />
 
       <form className="flex max-w-3xl flex-col gap-2 sm:flex-row" method="GET">
         <label className="sr-only" htmlFor="reference-data-search">

@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { AdministrationEmptyState } from "@/shared/administration/administration-empty-state";
+
 import type { DirectoryRole } from "../types/role-directory";
 
 interface RolesTableProps {
@@ -9,12 +11,10 @@ interface RolesTableProps {
 export function RolesTable({ roles }: RolesTableProps): React.ReactNode {
   if (roles.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
-        <h2 className="text-sm font-semibold text-slate-950">No roles found.</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Try a different search term.
-        </p>
-      </div>
+      <AdministrationEmptyState
+        description="Try a different search term."
+        title="No roles found."
+      />
     );
   }
 

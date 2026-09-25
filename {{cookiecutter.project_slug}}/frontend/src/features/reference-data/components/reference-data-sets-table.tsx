@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { AdministrationEmptyState } from "@/shared/administration/administration-empty-state";
+
 import type { ReferenceDataSet } from "../types/reference-data";
 
 interface ReferenceDataSetsTableProps {
@@ -13,14 +15,10 @@ export function ReferenceDataSetsTable({
 }: ReferenceDataSetsTableProps): React.ReactNode {
   if (referenceSets.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
-        <h2 className="text-sm font-semibold text-slate-950">
-          No reference-data sets found.
-        </h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Try a different search term or create the first lookup set.
-        </p>
-      </div>
+      <AdministrationEmptyState
+        description="Try a different search term or create the first lookup set."
+        title="No reference-data sets found."
+      />
     );
   }
 

@@ -1,3 +1,5 @@
+import { AdministrationEmptyState } from "@/shared/administration/administration-empty-state";
+
 import type { AuditEvent } from "../types/audit-event";
 import { StructuredData } from "./structured-data";
 
@@ -14,14 +16,10 @@ export function AuditEventsTable({
 }: AuditEventsTableProps): React.ReactNode {
   if (events.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
-        <h2 className="text-sm font-semibold text-slate-950">
-          No audit events found.
-        </h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Try adjusting the current filters.
-        </p>
-      </div>
+      <AdministrationEmptyState
+        description="Try adjusting the current filters."
+        title="No audit events found."
+      />
     );
   }
 

@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { AdministrationEmptyState } from "@/shared/administration/administration-empty-state";
+
 import type { DirectoryUser } from "../types/user-directory";
 import { UserStatusBadge } from "./user-status-badge";
 
@@ -20,12 +22,10 @@ export function UsersTable({
 }: UsersTableProps): React.ReactNode {
   if (users.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
-        <h2 className="text-sm font-semibold text-slate-950">No users found</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Try a different search term.
-        </p>
-      </div>
+      <AdministrationEmptyState
+        description="Try a different search term."
+        title="No users found"
+      />
     );
   }
 

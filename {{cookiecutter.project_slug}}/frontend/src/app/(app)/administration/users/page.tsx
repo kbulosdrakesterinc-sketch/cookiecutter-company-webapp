@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { getCurrentUser } from "@/features/auth/api/get-current-user";
+import { AdministrationPageHeader } from "@/shared/administration/administration-page-header";
 import { getUsers } from "@/features/users/api/get-users";
 import { UsersPagination } from "@/features/users/components/users-pagination";
 import { UsersTable } from "@/features/users/components/users-table";
@@ -51,25 +52,20 @@ export default async function UsersPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-950">
-            Users
-          </h1>
-          <p className="mt-1 text-sm leading-6 text-slate-600">
-            View application accounts and their current activation status.
-          </p>
-        </div>
-
-        {canProvisionUser ? (
-          <Link
-            className="inline-flex w-fit items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
-            href="/administration/users/new"
-          >
-            Add user
-          </Link>
-        ) : null}
-      </div>
+      <AdministrationPageHeader
+        action={
+          canProvisionUser ? (
+            <Link
+              className="inline-flex w-fit items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
+              href="/administration/users/new"
+            >
+              Add user
+            </Link>
+          ) : null
+        }
+        description="View application accounts and their current activation status."
+        title="Users"
+      />
 
       <form className="flex max-w-xl gap-2" method="GET">
         <label className="sr-only" htmlFor="user-search">
